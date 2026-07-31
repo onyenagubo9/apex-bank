@@ -12,7 +12,6 @@ declare global {
 
 export function TawkToChat() {
   useEffect(() => {
-    // Prevent duplicate script insertion
     if (document.getElementById('tawkto-script')) return;
 
     window.Tawk_API = window.Tawk_API || {};
@@ -21,7 +20,7 @@ export function TawkToChat() {
     const s1 = document.createElement('script');
     s1.id = 'tawkto-script';
     s1.async = true;
-    s1.src = 'https://embed.tawk.to/6a6c74d301120d1d462ed42e/1jurqgn6a';
+    s1.src = 'https://embed.tawk.to/6a6c74d301120d1d462ed42e/1jurqqn6a';
     s1.charset = 'UTF-8';
     s1.setAttribute('crossorigin', '*');
 
