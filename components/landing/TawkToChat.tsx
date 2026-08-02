@@ -20,7 +20,7 @@ export function TawkToChat() {
     const s1 = document.createElement('script');
     s1.id = 'tawkto-script';
     s1.async = true;
-    s1.src = 'https://embed.tawk.to/6a6c74d301120d1d462ed42e/1jurqqn6a';
+    s1.src = 'https://embed.tawk.to/6a6f9c848b05d11d458f3a90/1jv1vmq3u';
     s1.charset = 'UTF-8';
     s1.setAttribute('crossorigin', '*');
 
