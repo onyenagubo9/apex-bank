@@ -16,6 +16,8 @@ const AVAILABLE_CURRENCIES = [
   { code: 'CAD', name: 'Canadian Dollar', symbol: 'CA$' },
   { code: 'JPY', name: 'Japanese Yen', symbol: '¥' },
   { code: 'AUD', name: 'Australian Dollar', symbol: 'A$' },
+  { code: 'MXN', name: 'Mexican Peso', symbol: 'Mex$' },
+  { code: 'PHP', name: 'Philippine Peso', symbol: '₱' },
 ];
 
 export function CreateVaultModal({ isOpen, onClose, userId }: CreateVaultModalProps) {
@@ -74,7 +76,7 @@ export function CreateVaultModal({ isOpen, onClose, userId }: CreateVaultModalPr
             <label className="block text-xs font-semibold text-slate-400 mb-2">
               Select Currency
             </label>
-            <div className="grid grid-cols-1 gap-2">
+            <div className="grid grid-cols-1 gap-2 max-h-60 overflow-y-auto pr-1">
               {AVAILABLE_CURRENCIES.map((c) => (
                 <button
                   key={c.code}

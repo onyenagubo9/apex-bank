@@ -6,11 +6,12 @@ import type { AdapterAccountType } from 'next-auth/adapters';
 export const roleEnum = pgEnum('user_role', ['customer', 'admin']);
 export const kycStatusEnum = pgEnum('kyc_status', ['pending', 'approved', 'rejected']);
 export const genderEnum = pgEnum('gender', ['male', 'female', 'other', 'prefer_not_to_say']);
-export const currencyEnum = pgEnum('currency', ['USD', 'EUR', 'GBP', 'AUD', 'CAD']);
 export const accountCategoryEnum = pgEnum('account_category', ['asset', 'liability', 'equity', 'revenue', 'expense']);
 export const entryTypeEnum = pgEnum('entry_type', ['debit', 'credit']);
 export const ledgerStatusEnum = pgEnum('ledger_status', ['pending', 'posted', 'failed', 'reversed']);
 // Active Currencies managed by Admin
+
+export const currencyEnum = pgEnum('currency', ['USD', 'EUR', 'GBP', 'AUD', 'CAD', 'MXN', 'PHP']);
 export const currencies = pgTable('currencies', {
   code: text('code').primaryKey(), // e.g. 'USD', 'NGN', 'EUR', 'GBP'
   name: text('name').notNull(),    // e.g. 'US Dollar'

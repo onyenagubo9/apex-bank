@@ -243,6 +243,8 @@ export default function CustomerRegisterPage() {
                   <option value="Italy">Italy 🇮🇹</option>
                   <option value="Canada">Canada 🇨🇦</option>
                   <option value="Australia">Australia 🇦🇺</option>
+                  <option value="Mexico">Mexico MXN</option>
+                  <option value="Philippine">Philippine  PHP</option>
                 </select>
               </div>
             </div>

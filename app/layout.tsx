@@ -1,22 +1,10 @@
+// app/layout.tsx
 import type { Metadata } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
 import { SessionProvider } from 'next-auth/react';
+import { TawkToChat } from '@/components/landing/TawkToChat'; // Import it here
 import './globals.css';
 
-const geistSans = Geist({
-  variable: '--font-geist-sans',
-  subsets: ['latin'],
-});
-
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
-  subsets: ['latin'],
-});
-
-export const metadata: Metadata = {
-  title: 'Apex Bank | Enterprise Banking Portal',
-  description: 'Next-generation secure online banking platform.',
-};
+// ... metadata definitions ...
 
 export default function RootLayout({
   children,
@@ -24,13 +12,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-      suppressHydrationWarning
-    >
+    <html lang="en" className="h-full antialiased" suppressHydrationWarning>
       <body suppressHydrationWarning className="min-h-full flex flex-col bg-brand-canvas text-brand-navy">
-        <SessionProvider>{children}</SessionProvider>
+        <SessionProvider>
+          {children}
+          <TawkToChat /> {/* Render it inside the session/body provider */}
+        </SessionProvider>
       </body>
     </html>
   );
