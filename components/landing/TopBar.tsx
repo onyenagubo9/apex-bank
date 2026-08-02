@@ -14,9 +14,9 @@ export function TopBar() {
   const [isOpen, setIsOpen] = useState(false);
 
   const languages = [
-    { code: 'en', label: 'English' },
-    { code: 'fr', label: 'Français' },
-    { code: 'es', label: 'Español' },
+    { code: 'en', label: 'English', flag: '🇺🇸' },
+    { code: 'fr', label: 'Français', flag: '🇫🇷' },
+    { code: 'es', label: 'Español', flag: '🇪🇸' },
   ];
 
   const handleLanguageChange = (newLocale: 'en' | 'fr' | 'es') => {
@@ -26,7 +26,7 @@ export function TopBar() {
     });
   };
 
-  const currentLanguageLabel = languages.find((l) => l.code === locale)?.label || 'English';
+  const currentLanguage = languages.find((l) => l.code === locale) || languages[0];
 
   return (
     <div className="sticky top-0 w-full bg-[#070A10]/95 backdrop-blur-md border-b border-[#263346]/40 text-slate-400 text-xs py-2 px-6 lg:px-12 z-100">
@@ -39,7 +39,7 @@ export function TopBar() {
             className="flex items-center gap-2 hover:text-white transition-colors"
           >
             <Mail size={14} className="text-[#8B5CF6]" />
-            <span>support@apexbank.com</span>
+            <span>admin@apexbank.site</span>
           </a>
           <a
             href="tel:+18005550199"
@@ -57,13 +57,13 @@ export function TopBar() {
             disabled={isPending}
             className="flex items-center gap-2 bg-[#121824] hover:bg-[#1E293B] border border-[#263346] px-3 py-1.5 rounded-lg text-slate-300 transition-all font-medium cursor-pointer"
           >
-            <Globe size={14} className="text-[#8B5CF6]" />
-            <span>{currentLanguageLabel}</span>
+            <span className="text-sm">{currentLanguage.flag}</span>
+            <span>{currentLanguage.label}</span>
             <ChevronDown size={14} className={`transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
           </button>
 
           {isOpen && (
-            <div className="absolute right-0 top-full mt-2 w-36 bg-[#121824] border border-[#263346] rounded-xl shadow-2xl py-1 z-110 backdrop-blur-xl">
+            <div className="absolute right-0 top-full mt-2 w-40 bg-[#121824] border border-[#263346] rounded-xl shadow-2xl py-1 z-110 backdrop-blur-xl">
               {languages.map((lang) => (
                 <button
                   key={lang.code}
@@ -72,7 +72,10 @@ export function TopBar() {
                     locale === lang.code ? 'text-[#8B5CF6] font-bold bg-[#8B5CF6]/5' : 'text-slate-300'
                   }`}
                 >
-                  <span>{lang.label}</span>
+                  <span className="flex items-center gap-2">
+                    <span className="text-sm">{lang.flag}</span>
+                    <span>{lang.label}</span>
+                  </span>
                   {locale === lang.code && <span className="w-1.5 h-1.5 rounded-full bg-[#8B5CF6]" />}
                 </button>
               ))}
