@@ -48,7 +48,7 @@ export function LoginForm() {
     setLoading(true);
 
     try {
-      // 🔑 Perform NextAuth authentication with optional 2FA token
+      // 🔑 Perform NextAuth authentication
       const authRes = await signIn('credentials', {
         email,
         password,
@@ -56,26 +56,29 @@ export function LoginForm() {
         redirect: false,
       });
 
-      // 🛑 Handle errors or 2FA challenge responses securely
       if (authRes?.error) {
-        const errStr = String(authRes.error);
-        const errCode = (authRes as any).code;
+        const errMessage = String(authRes.error);
+        const errCode = (authRes as any).code || '';
 
-        if (
-          errStr === '2FA_REQUIRED' || 
-          errCode === '2FA_REQUIRED' || 
-          errStr.includes('2FA_REQUIRED')
+        // 🚫 Check for Account Suspension
+        if (errCode === 'ACCOUNT_SUSPENDED' || errMessage.includes('ACCOUNT_SUSPENDED')) {
+          setShowTwoFactor(false);
+          setError('Your account is suspended. Please contact support 🚫.');
+        } 
+        // 📱 Check if 2FA is required and the token wasn't provided yet
+        else if (
+          (errCode === '2FA_REQUIRED' || errMessage.includes('2FA_REQUIRED')) || 
+          (!showTwoFactor && (errMessage.includes('CredentialsSignin') || errCode === 'CredentialsSignin') && !twoFactorToken)
         ) {
           setShowTwoFactor(true);
           setError('Please enter your 2FA authenticator code 📱.');
-        } else if (
-          errStr === 'INVALID_2FA_TOKEN' || 
-          errCode === 'INVALID_2FA_TOKEN' || 
-          errStr.includes('INVALID_2FA_TOKEN')
-        ) {
-          setShowTwoFactor(true); // 👈 Keeps the 2FA input visible on incorrect codes!
+        } 
+        // ⚠️ Check for invalid 2FA token specifically when the field is visible
+        else if (errCode === 'INVALID_2FA_TOKEN' || errMessage.includes('INVALID_2FA_TOKEN') || showTwoFactor) {
+          setShowTwoFactor(true);
           setError('Invalid 2FA code. Please try again ⚠️.');
-        } else {
+        } 
+        else {
           setShowTwoFactor(false);
           setError(t('errors.invalidCredentials'));
         }
@@ -98,7 +101,11 @@ export function LoginForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
       {error && (
-        <div className="p-3.5 rounded-xl border border-red-500/25 bg-red-500/10 text-red-400 text-xs font-semibold text-center">
+        <div className={`p-3.5 rounded-xl border text-xs font-semibold text-center ${
+          error.includes('authenticator code')
+            ? 'border-purple-500/25 bg-purple-500/10 text-purple-300'
+            : 'border-red-500/25 bg-red-500/10 text-red-400'
+        }`}>
           {error}
         </div>
       )}
@@ -125,7 +132,7 @@ export function LoginForm() {
 
       {/* 🔐 Conditional 2FA Input Field */}
       {showTwoFactor && (
-        <div className="space-y-1">
+        <div className="space-y-1 animate-fadeIn">
           <label className="text-xs font-semibold text-slate-300 uppercase block">
             2FA Verification Code 📱
           </label>

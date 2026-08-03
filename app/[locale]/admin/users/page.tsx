@@ -2,14 +2,16 @@
 
 import { useState, useEffect } from 'react';
 import { getAllUsersWithBalance } from '@/actions/admin-users';
+import { toggleUserSuspension } from '@/actions/admin';
 import { AddFundsModal } from '@/components/admin/AddFundsModal';
-import { Users, DollarSign, Search, CheckCircle2, Clock, Loader2, Wallet } from 'lucide-react';
+import { Users, DollarSign, Search, CheckCircle2, Clock, Loader2, Ban, UserCheck } from 'lucide-react';
 
 export default function UserDirectoryPage() {
   const [userList, setUserList] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedUser, setSelectedUser] = useState<{ id: string; name: string } | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
 
   const loadUsers = async () => {
     setLoading(true);
@@ -21,6 +23,26 @@ export default function UserDirectoryPage() {
   useEffect(() => {
     loadUsers();
   }, []);
+
+  const handleToggleSuspension = async (userId: string, currentStatus: boolean) => {
+    setActionLoadingId(userId);
+    
+    // Call server action to toggle suspension status in database
+    const res = await toggleUserSuspension(userId, !currentStatus);
+    
+    if (res.success) {
+      // Optimistically update local state immediately so the button flips instantly
+      setUserList((prevList) =>
+        prevList.map((u) => (u.id === userId ? { ...u, isSuspended: !currentStatus } : u))
+      );
+      // Sync fresh data from the server in the background
+      await loadUsers();
+    } else {
+      alert(res.error || 'Failed to update user suspension status.');
+    }
+    
+    setActionLoadingId(null);
+  };
 
   const filteredUsers = userList.filter(
     (u) =>
@@ -39,7 +61,7 @@ export default function UserDirectoryPage() {
             User Directory
           </h1>
           <p className="text-sm text-slate-400 mt-1">
-            Manage users, view live account balances, and adjust ledger funds
+            Manage users, view live account balances, control access, and adjust ledger funds
           </p>
         </div>
 
@@ -59,7 +81,7 @@ export default function UserDirectoryPage() {
       {/* Directory Table 📑 */}
       {loading ? (
         <div className="flex items-center justify-center py-20 text-slate-400 gap-2 font-medium text-sm">
-          <Loader2 className="animate-spin text-[#8B5CF6]" size={20} /> Fetching balances...
+          <Loader2 className="animate-spin text-[#8B5CF6]" size={20} /> Fetching directory records...
         </div>
       ) : (
         <div className="rounded-2xl border border-[#263346] bg-[#151C28] overflow-hidden shadow-xl">
@@ -71,6 +93,7 @@ export default function UserDirectoryPage() {
                   <th className="px-5 py-4">Account No.</th>
                   <th className="px-5 py-4">Current Balance 💰</th>
                   <th className="px-5 py-4">KYC Status</th>
+                  <th className="px-5 py-4">Account Status</th>
                   <th className="px-5 py-4 text-right">Actions</th>
                 </tr>
               </thead>
@@ -88,7 +111,7 @@ export default function UserDirectoryPage() {
 
                     {/* Live Balance Display 💳 */}
                     <td className="px-5 py-4 font-bold text-emerald-400 font-mono text-sm">
-                      ${parseFloat(user.balance).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      ${parseFloat(user.balance || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
 
                     {/* KYC Badge */}
@@ -104,14 +127,51 @@ export default function UserDirectoryPage() {
                       )}
                     </td>
 
-                    {/* Action Button ⚡ */}
-                    <td className="px-5 py-4 text-right">
+                    {/* Account Suspension Badge */}
+                    <td className="px-5 py-4">
+                      {user.isSuspended ? (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-rose-500/10 text-rose-400 border border-rose-500/20 font-semibold text-[11px]">
+                          <Ban size={12} /> Suspended
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20 font-semibold text-[11px]">
+                          <UserCheck size={12} /> Active
+                        </span>
+                      )}
+                    </td>
+
+                    {/* Action Buttons ⚡ */}
+                    <td className="px-5 py-4 text-right space-x-2 whitespace-nowrap">
                       <button
                         onClick={() => setSelectedUser({ id: user.id, name: user.name })}
                         className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#8B5CF6]/10 text-[#A78BFA] border border-[#8B5CF6]/30 font-semibold hover:bg-[#8B5CF6] hover:text-white transition shadow-sm"
                       >
                         <DollarSign size={14} />
-                        <span>Add Funds</span>
+                        <span>Funds</span>
+                      </button>
+
+                      <button
+                        onClick={() => handleToggleSuspension(user.id, user.isSuspended)}
+                        disabled={actionLoadingId === user.id}
+                        className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border font-semibold transition shadow-sm ${
+                          user.isSuspended
+                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500 hover:text-white'
+                            : 'bg-rose-500/10 text-rose-400 border-rose-500/30 hover:bg-rose-500 hover:text-white'
+                        }`}
+                      >
+                        {actionLoadingId === user.id ? (
+                          <Loader2 size={14} className="animate-spin" />
+                        ) : user.isSuspended ? (
+                          <>
+                            <UserCheck size={14} />
+                            <span>Activate</span>
+                          </>
+                        ) : (
+                          <>
+                            <Ban size={14} />
+                            <span>Suspend</span>
+                          </>
+                        )}
                       </button>
                     </td>
                   </tr>
@@ -129,7 +189,7 @@ export default function UserDirectoryPage() {
         userName={selectedUser?.name || ''}
         onClose={() => {
           setSelectedUser(null);
-          loadUsers(); // Refresh balances after adding funds! 🔄
+          loadUsers(); // Refresh balances and details after closing! 🔄
         }}
       />
     </div>

@@ -37,8 +37,10 @@ export const users = pgTable('users', {
   kycStatus: text('kyc_status').default('pending').notNull(),
   twoFactorSecret: text('two_factor_secret'), // 🔑 Stores the TOTP secret key
   twoFactorEnabled: boolean('two_factor_enabled').default(false).notNull(), // 🛡️ Tracks if 2FA is active
+  isSuspended: boolean('is_suspended').default(false).notNull(), // 🚫 Tracks if account is suspended by admin
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
+
 
 // --- NEXTAUTH TABLES ---
 export const accounts = pgTable('accounts', {
@@ -347,4 +349,14 @@ export const verificationCodes = pgTable('verification_codes', {
   code: text('code').notNull(),
   password: text('password').notNull(),
   expiresAt: timestamp('expires_at').notNull(),
+});
+
+
+export const auditLogs = pgTable('audit_logs', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }), // Changed from text('user_id') to uuid('user_id')
+  action: text('action').notNull(),
+  ipAddress: text('ip_address'),
+  userAgent: text('user_agent'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
 });

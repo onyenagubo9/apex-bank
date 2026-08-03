@@ -3,7 +3,7 @@ import NextAuth, { type DefaultSession, CredentialsSignin } from 'next-auth';
 import { DrizzleAdapter } from '@auth/drizzle-adapter';
 import Credentials from 'next-auth/providers/credentials';
 import { db } from '@/lib/db';
-import { users, accounts, sessions } from '@/lib/db/schema';
+import { users, accounts, sessions, auditLogs } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
 import { headers } from 'next/headers';
@@ -22,6 +22,13 @@ class InvalidTwoFactorError extends CredentialsSignin {
   constructor() {
     super();
     this.code = 'INVALID_2FA_TOKEN';
+  }
+}
+
+class AccountSuspendedError extends CredentialsSignin {
+  constructor() {
+    super();
+    this.code = 'ACCOUNT_SUSPENDED';
   }
 }
 
@@ -71,13 +78,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           return null;
         }
 
-        // 2. Verify password hash 🔑
+        // 🚫 2. Check if account is suspended by an admin
+        if (user.isSuspended) {
+          throw new AccountSuspendedError();
+        }
+
+        // 3. Verify password hash 🔑
         const isPasswordValid = await bcrypt.compare(plainPassword, user.password);
         if (!isPasswordValid) {
           return null;
         }
 
-        // 3. Verify 2FA if enabled 🛡️
+        // 4. Verify 2FA if enabled 🛡️
         if (user.twoFactorEnabled) {
           if (!twoFactorToken) {
             throw new TwoFactorRequiredError();
@@ -93,10 +105,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           }
         }
 
-        // 4. Capture metadata & parse device information 🕵️‍♂️
+        // 5. Capture metadata & parse device information 🕵️‍♂️
         const headerList = await headers();
         const rawUserAgent = headerList.get('user-agent') || '';
-        const ipAddress = headerList.get('x-forwarded-for')?.split(',')[0] || '127.0.0.1';
+        
+        // Robust real IP extraction prioritizing proxy headers
+        const ipAddress = 
+          headerList.get('cf-connecting-ip') || 
+          headerList.get('x-client-ip') || 
+          headerList.get('x-forwarded-for')?.split(',')[0].trim() || 
+          headerList.get('x-real-ip') || 
+          '127.0.0.1';
 
         const parser = new UAParser(rawUserAgent);
         const device = parser.getDevice();
@@ -120,7 +139,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           lastActive: new Date(),
         });
 
-        // 5. Return user object ✅
+        // 📝 Record security audit log entry for admin tracking with the real IP address
+        await db.insert(auditLogs).values({
+          userId: user.id,
+          action: 'USER_SIGNIN',
+          ipAddress,
+          userAgent: rawUserAgent,
+        });
+
+        // 6. Return user object ✅
         return {
           id: user.id,
           name: user.name,

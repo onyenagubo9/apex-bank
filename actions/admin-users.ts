@@ -1,3 +1,4 @@
+// actions/admin-users.ts
 'use server';
 
 import { db } from '@/lib/db';
@@ -13,12 +14,13 @@ export async function getAllUsersWithBalance() {
         email: users.email,
         accountNumber: users.accountNumber,
         kycStatus: users.kycStatus,
+        isSuspended: users.isSuspended, // 🚫 Added so the frontend receives the suspension status
         // COALESCE ensures users without accounts display '0.00' instead of null 💰
         balance: sql<string>`COALESCE(SUM(${ledgerAccounts.balance}), '0.00')`,
       })
       .from(users)
       .leftJoin(ledgerAccounts, eq(users.id, ledgerAccounts.userId))
-      .groupBy(users.id); // Groups duplicate rows by unique user ID 🔑
+      .groupBy(users.id, users.isSuspended); // Included in group by for clean aggregation 🔑
 
     return { success: true, data: records };
   } catch (error: any) {
