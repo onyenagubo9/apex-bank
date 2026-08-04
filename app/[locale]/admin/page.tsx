@@ -11,6 +11,7 @@ import {
   CheckCircle2,
   Clock,
   ArrowLeft,
+  Globe,
 } from 'lucide-react';
 import KycActionButton from './KycActionButton';
 
@@ -70,6 +71,13 @@ export default async function AdminDashboardPage() {
           </div>
 
           <div className="flex items-center gap-3">
+            {/* Link to Site Visitors / Settings Analytics */}
+            <Link
+              href="/admin/visitors"
+              className="flex items-center gap-2 rounded-xl border border-[#8B5CF6]/30 bg-[#8B5CF6]/10 px-4 py-2 text-xs font-semibold text-[#A78BFA] hover:bg-[#8B5CF6]/20 transition"
+            >
+              <Globe size={14} /> View Site Visitors
+            </Link>
             <Link
               href="/dashboard"
               className="flex items-center gap-2 rounded-xl border border-[#263346] bg-[#151C28] px-4 py-2 text-xs font-semibold text-slate-300 hover:bg-[#263346] transition"
