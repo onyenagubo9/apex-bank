@@ -32,6 +32,13 @@ class AccountSuspendedError extends CredentialsSignin {
   }
 }
 
+class InvalidPasswordError extends CredentialsSignin {
+  constructor() {
+    super();
+    this.code = 'INVALID_PASSWORD';
+  }
+}
+
 // Extend NextAuth types 🏷️
 declare module 'next-auth' {
   interface User {
@@ -75,7 +82,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const [user] = await db.select().from(users).where(eq(users.email, email));
 
         if (!user || !user.password) {
-          return null;
+          throw new InvalidPasswordError();
         }
 
         // 🚫 2. Check if account is suspended by an admin
@@ -86,7 +93,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         // 3. Verify password hash 🔑
         const isPasswordValid = await bcrypt.compare(plainPassword, user.password);
         if (!isPasswordValid) {
-          return null;
+          throw new InvalidPasswordError();
         }
 
         // 4. Verify 2FA if enabled 🛡️
@@ -105,17 +112,23 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           }
         }
 
-        // 5. Capture metadata & parse device information 🕵️‍♂️
-        const headerList = await headers();
-        const rawUserAgent = headerList.get('user-agent') || '';
-        
-        // Robust real IP extraction prioritizing proxy headers
-        const ipAddress = 
-          headerList.get('cf-connecting-ip') || 
-          headerList.get('x-client-ip') || 
-          headerList.get('x-forwarded-for')?.split(',')[0].trim() || 
-          headerList.get('x-real-ip') || 
-          '127.0.0.1';
+        // 5. Capture metadata & parse device information safely 🕵️‍♂️
+        let ipAddress = '127.0.0.1';
+        let rawUserAgent = '';
+
+        try {
+          const headerList = await headers();
+          rawUserAgent = headerList.get('user-agent') || '';
+          
+          ipAddress = 
+            headerList.get('cf-connecting-ip') || 
+            headerList.get('x-client-ip') || 
+            headerList.get('x-forwarded-for')?.split(',')[0].trim() || 
+            headerList.get('x-real-ip') || 
+            '127.0.0.1';
+        } catch (e) {
+          // Fallback if headers context is unavailable during background polling
+        }
 
         const parser = new UAParser(rawUserAgent);
         const device = parser.getDevice();
@@ -139,7 +152,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           lastActive: new Date(),
         });
 
-        // 📝 Record security audit log entry for admin tracking with the real IP address
+        // 📝 Record security audit log entry including visitor IP (without country)
         await db.insert(auditLogs).values({
           userId: user.id,
           action: 'USER_SIGNIN',

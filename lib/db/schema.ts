@@ -353,10 +353,18 @@ export const verificationCodes = pgTable('verification_codes', {
 
 
 export const auditLogs = pgTable('audit_logs', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }), // Changed from text('user_id') to uuid('user_id')
+  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+  userId: text('user_id'),
   action: text('action').notNull(),
   ipAddress: text('ip_address'),
   userAgent: text('user_agent'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+export const siteVisitors = pgTable('site_visitors', {
+  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+  ipAddress: text('ip_address'),
+  userAgent: text('user_agent'),
+  path: text('path').notNull(), // The page they visited
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });

@@ -60,24 +60,31 @@ export function LoginForm() {
         const errMessage = String(authRes.error);
         const errCode = (authRes as any).code || '';
 
-        // 🚫 Check for Account Suspension
+        // 🚫 1. Check for Account Suspension
         if (errCode === 'ACCOUNT_SUSPENDED' || errMessage.includes('ACCOUNT_SUSPENDED')) {
           setShowTwoFactor(false);
           setError('Your account is suspended. Please contact support 🚫.');
         } 
-        // 📱 Check if 2FA is required and the token wasn't provided yet
+        // 🔑 2. Check for Invalid Password
+        else if (errCode === 'INVALID_PASSWORD' || errMessage.includes('INVALID_PASSWORD')) {
+          setShowTwoFactor(false);
+          setError('Invalid password. Please try again ⚠️.');
+        } 
+        // 📱 3. Check if 2FA is required and token is missing
         else if (
-          (errCode === '2FA_REQUIRED' || errMessage.includes('2FA_REQUIRED')) || 
+          errCode === '2FA_REQUIRED' || 
+          errMessage.includes('2FA_REQUIRED') || 
           (!showTwoFactor && (errMessage.includes('CredentialsSignin') || errCode === 'CredentialsSignin') && !twoFactorToken)
         ) {
           setShowTwoFactor(true);
           setError('Please enter your 2FA authenticator code 📱.');
         } 
-        // ⚠️ Check for invalid 2FA token specifically when the field is visible
-        else if (errCode === 'INVALID_2FA_TOKEN' || errMessage.includes('INVALID_2FA_TOKEN') || showTwoFactor) {
+        // ⚠️ 4. Check for invalid 2FA token specifically
+        else if (errCode === 'INVALID_2FA_TOKEN' || errMessage.includes('INVALID_2FA_TOKEN')) {
           setShowTwoFactor(true);
           setError('Invalid 2FA code. Please try again ⚠️.');
         } 
+        // ❌ 5. Fallback for general errors
         else {
           setShowTwoFactor(false);
           setError(t('errors.invalidCredentials'));
