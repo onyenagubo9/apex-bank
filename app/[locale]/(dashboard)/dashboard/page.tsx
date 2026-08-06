@@ -21,8 +21,8 @@ export default async function DashboardOverviewPage() {
   const userId = session.user.id;
 
   // 1. Fetch live KYC status from kycVerifications table 🛡️
-  const { kyc } = await getKycStatus(userId);
-  const kycStatus = kyc?.status || 'unverified';
+  const kycRecord = await getKycStatus(userId);
+  const kycStatus = kycRecord?.status || 'unverified';
 
   // 2. Fetch multi-currency vaults with balances 🏦
   const accounts = await db
