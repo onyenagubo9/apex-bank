@@ -1,8 +1,9 @@
+// components/transfers/TransferForm.tsx
 'use client';
 
 import { useState } from 'react';
 import { executeInternalTransfer } from '@/actions/transfers';
-import { Send, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
+import { Send, Loader2, CheckCircle, AlertCircle, Lock } from 'lucide-react';
 
 interface Vault {
   id: string;
@@ -22,6 +23,7 @@ export function TransferForm({ userId, userVaults }: TransferFormProps) {
   const [recipientAccount, setRecipientAccount] = useState('');
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
+  const [pin, setPin] = useState(''); // 🔐 Secret transaction PIN state
 
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
@@ -36,6 +38,11 @@ export function TransferForm({ userId, userVaults }: TransferFormProps) {
       return;
     }
 
+    if (!pin || pin.length !== 4) {
+      setStatus({ type: 'error', message: 'Please enter your 4-digit transaction PIN.' });
+      return;
+    }
+
     setLoading(true);
 
     const res = await executeInternalTransfer({
@@ -44,16 +51,17 @@ export function TransferForm({ userId, userVaults }: TransferFormProps) {
       recipientAccountNumber: recipientAccount.trim(),
       amount: numAmount,
       description: description.trim() || 'Internal Ledger Transfer',
+      pin, // 🔐 Pass the transaction PIN
     });
 
     setLoading(false);
 
-    // 🔑 Using 'in' operator guarantees TypeScript knows 'message' or 'error' exists
     if ('message' in res && res.message) {
       setStatus({ type: 'success', message: res.message });
       setAmount('');
       setRecipientAccount('');
       setDescription('');
+      setPin(''); // Reset PIN on success
     } else if ('error' in res && res.error) {
       setStatus({ type: 'error', message: res.error });
     } else {
@@ -134,6 +142,22 @@ export function TransferForm({ userId, userVaults }: TransferFormProps) {
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             className="w-full rounded-xl border border-[#263346] bg-[#0B0F17] px-3.5 py-2.5 text-white placeholder-slate-500 focus:border-[#8B5CF6] focus:outline-none"
+          />
+        </div>
+
+        {/* 🔐 Transaction PIN Field */}
+        <div>
+          <label className="block text-slate-400 mb-1 font-semibold flex items-center gap-1.5">
+            <Lock size={13} className="text-[#8B5CF6]" /> Transaction PIN 🔐
+          </label>
+          <input
+            type="password"
+            maxLength={4}
+            placeholder="••••"
+            value={pin}
+            onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
+            required
+            className="w-full rounded-xl border border-[#263346] bg-[#0B0F17] px-3.5 py-2.5 text-center text-base tracking-widest text-white placeholder-slate-600 focus:border-[#8B5CF6] focus:outline-none font-mono"
           />
         </div>
 
