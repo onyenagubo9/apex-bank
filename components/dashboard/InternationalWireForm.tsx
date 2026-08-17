@@ -1,3 +1,4 @@
+// components/dashboard/InternationalWireForm.tsx
 'use client';
 
 import { useState } from 'react';
@@ -7,7 +8,7 @@ import {
   InternationalWireSchema,
   type InternationalWireInput,
 } from '@/lib/validations/transfer';
-import { Globe, Building2, User, DollarSign, Send, CheckCircle2, ExternalLink, RefreshCw } from 'lucide-react';
+import { Globe, Building2, User, DollarSign, Send, CheckCircle2, ExternalLink, RefreshCw, Lock } from 'lucide-react';
 import Link from 'next/link';
 
 interface Vault {
@@ -24,6 +25,7 @@ interface InternationalWireFormProps {
 
 export function InternationalWireForm({ vaults }: InternationalWireFormProps) {
   const [selectedVaultId, setSelectedVaultId] = useState(vaults[0]?.id || '');
+  const [pin, setPin] = useState(''); // 🔐 Transaction PIN state
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successData, setSuccessData] = useState<{ message: string; ledgerLineId?: string } | null>(null);
   const [serverError, setServerError] = useState('');
@@ -38,6 +40,11 @@ export function InternationalWireForm({ vaults }: InternationalWireFormProps) {
   });
 
   const onSubmit = async (data: InternationalWireInput) => {
+    if (!pin || pin.length !== 4) {
+      setServerError('Please enter a valid 4-digit transaction PIN.');
+      return;
+    }
+
     setIsSubmitting(true);
     setServerError('');
     setSuccessData(null);
@@ -49,6 +56,7 @@ export function InternationalWireForm({ vaults }: InternationalWireFormProps) {
         body: JSON.stringify({
           ...data,
           sourceAccountId: selectedVaultId,
+          pin, // 🔐 Pass transaction PIN
         }),
       });
 
@@ -63,6 +71,7 @@ export function InternationalWireForm({ vaults }: InternationalWireFormProps) {
         ledgerLineId: result.ledgerLineId,
       });
       reset();
+      setPin(''); // Reset PIN on success
     } catch (err: any) {
       setServerError(err.message || 'An unexpected error occurred.');
     } finally {
@@ -254,7 +263,7 @@ export function InternationalWireForm({ vaults }: InternationalWireFormProps) {
         </div>
       </div>
 
-      {/* 4. Amount & Submit 💰 */}
+      {/* 4. Amount & PIN & Submit 💰 */}
       <div className="pt-2 border-t border-[#263346] space-y-4">
         <div>
           <label className="text-xs font-medium text-slate-300 block mb-1 flex items-center gap-1">
@@ -270,6 +279,23 @@ export function InternationalWireForm({ vaults }: InternationalWireFormProps) {
           {errors.amount && (
             <p className="text-xs text-red-400 mt-1">{errors.amount.message}</p>
           )}
+        </div>
+
+        {/* 🔐 Transaction PIN Input Field */}
+        <div className="space-y-1.5">
+          <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+            <Lock size={14} className="text-[#8B5CF6]" /> Transaction PIN 🔐
+          </label>
+          <input
+            type="password"
+            maxLength={4}
+            value={pin}
+            onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
+            placeholder="••••"
+            required
+            className="w-full bg-[#0B0F17] border border-[#263346] rounded-xl px-4 py-3 text-center text-lg tracking-widest text-white font-mono focus:outline-none focus:border-[#8B5CF6]"
+          />
+          <p className="text-[11px] text-slate-500">Enter your 4-digit secret transfer PIN to authorize this wire.</p>
         </div>
 
         <button

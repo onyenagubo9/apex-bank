@@ -21,6 +21,7 @@ export const currencies = pgTable('currencies', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
+
 // Users table with mandatory 10-digit Account Number and NextAuth compatibility fields 👤
 export const users = pgTable('users', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -38,6 +39,7 @@ export const users = pgTable('users', {
   twoFactorSecret: text('two_factor_secret'), // 🔑 Stores the TOTP secret key
   twoFactorEnabled: boolean('two_factor_enabled').default(false).notNull(), // 🛡️ Tracks if 2FA is active
   isSuspended: boolean('is_suspended').default(false).notNull(), // 🚫 Tracks if account is suspended by admin
+  pin: text('pin'), // 🔐 Stores the hashed 4-digit transaction PIN
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
@@ -183,6 +185,8 @@ export const kycVerifications = pgTable('kyc_verifications', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
+
+
 export const cardTypeEnum = pgEnum('card_type', ['metal', 'virtual']);
 export const cardStatusEnum = pgEnum('card_status', ['active', 'frozen']);
 

@@ -1,7 +1,8 @@
+// components/dashboard/P2PTransferForm.tsx
 'use client';
 
 import { useState } from 'react';
-import { UserCheck, Send, CheckCircle2, AlertCircle, ExternalLink, RefreshCw } from 'lucide-react';
+import { UserCheck, Send, CheckCircle2, AlertCircle, ExternalLink, RefreshCw, Lock } from 'lucide-react';
 import Link from 'next/link';
 import { executeInternalTransfer } from '@/actions/transfers';
 
@@ -22,6 +23,7 @@ export function P2PTransferForm({ vaults, userId }: P2PTransferFormProps) {
   const [recipientAccountNumber, setRecipientAccountNumber] = useState('');
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
+  const [pin, setPin] = useState(''); // 🔐 Secret transaction PIN state
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successData, setSuccessData] = useState<{ message: string; ledgerLineId: string } | null>(null);
@@ -40,12 +42,19 @@ export function P2PTransferForm({ vaults, userId }: P2PTransferFormProps) {
       return;
     }
 
+    if (!pin || pin.length !== 4) {
+      setErrorMessage('Please enter a valid 4-digit transaction PIN.');
+      setIsSubmitting(false);
+      return;
+    }
+
     const result = await executeInternalTransfer({
       senderUserId: userId,
       senderAccountId: selectedVaultId,
       recipientAccountNumber,
       amount: parsedAmount,
       description: description || 'P2P Transfer',
+      pin, // 🔐 Pass transaction PIN
     });
 
     if (result.success) {
@@ -56,6 +65,7 @@ export function P2PTransferForm({ vaults, userId }: P2PTransferFormProps) {
       setRecipientAccountNumber('');
       setAmount('');
       setDescription('');
+      setPin(''); // Reset PIN on success
     } else {
       setErrorMessage(result.error);
     }
@@ -178,6 +188,23 @@ export function P2PTransferForm({ vaults, userId }: P2PTransferFormProps) {
           placeholder="e.g. Dinner reimbursement"
           className="w-full bg-[#0B0F17] border border-[#263346] rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#8B5CF6]"
         />
+      </div>
+
+      {/* 🔐 Transaction PIN Input Field */}
+      <div className="space-y-1.5">
+        <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+          <Lock size={14} className="text-[#8B5CF6]" /> Transaction PIN 🔐
+        </label>
+        <input
+          type="password"
+          maxLength={4}
+          value={pin}
+          onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
+          placeholder="••••"
+          required
+          className="w-full bg-[#0B0F17] border border-[#263346] rounded-xl px-4 py-3 text-center text-lg tracking-widest text-white font-mono focus:outline-none focus:border-[#8B5CF6]"
+        />
+        <p className="text-[11px] text-slate-500">Enter your 4-digit secret transfer PIN to authorize this payment.</p>
       </div>
 
       <button

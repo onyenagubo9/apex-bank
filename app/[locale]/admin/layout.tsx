@@ -1,3 +1,4 @@
+// app/admin/layout.tsx
 'use client';
 
 import { useState } from 'react';
@@ -14,14 +15,14 @@ import {
   Menu,
   X,
   Landmark,
-  CreditCard
+  CreditCard,
+  Globe
 } from 'lucide-react';
-
-
 
 const navigation = [
   { name: 'Overview', href: '/admin', icon: LayoutDashboard },
   { name: 'KYC Approvals', href: '/admin/kyc', icon: FileCheck },
+  { name: 'Transactions', href: '/admin/transactions', icon: Globe }, // 👈 Added Transactions link here
   { name: 'Loans', href: '/admin/loans', icon: Landmark },
   { name: 'Cards', href: '/admin/cards', icon: CreditCard },
   { name: 'User Directory', href: '/admin/users', icon: Users },

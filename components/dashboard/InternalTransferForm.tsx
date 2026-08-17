@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { ArrowLeftRight, Send, CheckCircle2, AlertCircle, RefreshCw } from 'lucide-react';
+import { ArrowLeftRight, Send, CheckCircle2, AlertCircle, RefreshCw, Lock } from 'lucide-react';
 import { executeInternalTransfer } from '@/actions/transfers';
 import { useTranslations } from 'next-intl';
 
@@ -29,6 +29,7 @@ export function InternalTransferForm({ vaults, userId, rates = [] }: InternalTra
   const [sourceVaultId, setSourceVaultId] = useState(vaults[0]?.id || '');
   const [targetVaultId, setTargetVaultId] = useState(vaults[1]?.id || vaults[0]?.id || '');
   const [amount, setAmount] = useState('');
+  const [pin, setPin] = useState(''); // 🔐 Secret transaction PIN state
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
@@ -74,17 +75,25 @@ export function InternalTransferForm({ vaults, userId, rates = [] }: InternalTra
       return;
     }
 
+    if (!pin || pin.length !== 4) {
+      setErrorMessage('Please enter a valid 4-digit transaction PIN.');
+      setIsSubmitting(false);
+      return;
+    }
+
     const result = await executeInternalTransfer({
       senderUserId: userId,
       senderAccountId: sourceVaultId,
       targetAccountId: targetVaultId,
       amount: numericAmount,
       description: 'Internal Vault Swap',
+      pin, // 🔐 Pass the transaction PIN
     });
 
     if (result.success) {
       setSuccessMessage('message' in result && result.message ? result.message : t('success.swapCompleted'));
       setAmount('');
+      setPin(''); // Reset PIN on success
     } else {
       setErrorMessage('error' in result && result.error ? String(result.error) : t('errors.swapFailed'));
     }
@@ -171,6 +180,23 @@ export function InternalTransferForm({ vaults, userId, rates = [] }: InternalTra
           required
           className="w-full bg-[#0B0F17] border border-[#263346] rounded-xl px-4 py-3 text-lg font-bold text-white focus:outline-none focus:border-[#8B5CF6]"
         />
+      </div>
+
+      {/* 🔐 Transaction PIN Input Field */}
+      <div className="space-y-1.5">
+        <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+          <Lock size={14} className="text-[#8B5CF6]" /> Transaction PIN 🔐
+        </label>
+        <input
+          type="password"
+          maxLength={4}
+          value={pin}
+          onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
+          placeholder="••••"
+          required
+          className="w-full bg-[#0B0F17] border border-[#263346] rounded-xl px-4 py-3 text-center text-lg tracking-widest text-white font-mono focus:outline-none focus:border-[#8B5CF6]"
+        />
+        <p className="text-[11px] text-slate-500">Enter your 4-digit secret transfer PIN to authorize this swap.</p>
       </div>
 
       {/* Live Preview Card 💡 */}

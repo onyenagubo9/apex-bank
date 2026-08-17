@@ -1,9 +1,11 @@
+// actions/transfers.ts
 'use server';
 
 import { db } from '@/lib/db';
-import { ledgerAccounts, journalEntries, ledgerLines, exchangeRates } from '@/lib/db/schema';
+import { ledgerAccounts, journalEntries, ledgerLines, exchangeRates, users } from '@/lib/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
+import bcrypt from 'bcryptjs';
 
 interface TransferParams {
   senderUserId: string;
@@ -12,6 +14,7 @@ interface TransferParams {
   recipientAccountNumber?: string;
   amount: number;
   description?: string;
+  pin: string; // 🔐 Mandatory transaction PIN parameter
 }
 
 export type TransferResult =
@@ -25,10 +28,30 @@ export async function executeInternalTransfer({
   recipientAccountNumber,
   amount,
   description = 'Transfer',
+  pin,
 }: TransferParams): Promise<TransferResult> {
   try {
     if (amount <= 0) {
       return { success: false, error: 'Transfer amount must be greater than zero.' };
+    }
+
+    if (!pin || pin.length !== 4) {
+      return { success: false, error: 'Please enter a valid 4-digit transaction PIN.' };
+    }
+
+    // 0. Verify User Transaction PIN First 🔐
+    const [senderUser] = await db
+      .select({ pin: users.pin })
+      .from(users)
+      .where(eq(users.id, senderUserId));
+
+    if (!senderUser || !senderUser.pin) {
+      return { success: false, error: 'Transaction PIN not configured. Please set your PIN in settings.' };
+    }
+
+    const isPinValid = await bcrypt.compare(pin, senderUser.pin);
+    if (!isPinValid) {
+      return { success: false, error: 'Incorrect transaction PIN.' };
     }
 
     return await db.transaction(async (tx) => {
