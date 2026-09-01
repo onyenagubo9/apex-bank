@@ -1,3 +1,4 @@
+// lib/validations/auth.ts (or wherever your current schema file is located)
 import { z } from 'zod';
 
 export const CustomerRegisterSchema = z.object({
@@ -19,3 +20,6 @@ export const CustomerRegisterSchema = z.object({
 });
 
 export type CustomerRegisterInput = z.infer<typeof CustomerRegisterSchema>;
+
+// 🆕 Export the CurrencyCode type derived directly from the schema enum
+export type CurrencyCode = z.infer<typeof CustomerRegisterSchema.shape.primaryCurrency>;

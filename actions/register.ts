@@ -10,7 +10,7 @@ import { z } from 'zod';
 import bcrypt from 'bcryptjs';
 import { sendEmail } from '@/lib/mail';
 
-type CurrencyCode = 'USD' | 'EUR' | 'GBP' | 'AUD' | 'CAD';
+type CurrencyCode = 'USD' | 'EUR' | 'GBP' | 'AUD' | 'CAD' | 'THB' | 'ZAR';
 
 function generateAccountNumber(): string {
   const prefix = '3';
