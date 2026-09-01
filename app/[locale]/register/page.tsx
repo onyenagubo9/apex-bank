@@ -9,7 +9,7 @@ import { useTranslations } from 'next-intl';
 import { initiateRegistration, verifyAndRegister } from '@/actions/register';
 import { CustomerRegisterSchema } from '@/lib/validations/auth';
 import { InputGroup } from '@/components/auth/InputGroup';
-import { CurrencyPicker } from '@/components/auth/CurrencyPicker';
+import { CurrencyPicker, Currency } from '@/components/auth/CurrencyPicker';
 import { StepIndicator } from '@/components/auth/StepIndicator';
 import { Crown, ArrowRight, ArrowLeft } from 'lucide-react';
 
@@ -27,7 +27,7 @@ export default function CustomerRegisterPage() {
   const [phone, setPhone] = useState('');
   const [gender, setGender] = useState<'male' | 'female' | 'other' | 'prefer_not_to_say'>('male');
   const [country, setCountry] = useState('United Kingdom');
-  const [primaryCurrency, setPrimaryCurrency] = useState<'USD' | 'EUR' | 'GBP' | 'AUD' | 'CAD' | 'THB' | 'ZAR'>('USD');
+  const [primaryCurrency, setPrimaryCurrency] = useState<Currency>('USD');
   const [streetAddress, setStreetAddress] = useState('');
   const [governmentId, setGovernmentId] = useState('');
   const [agreedToTerms, setAgreedToTerms] = useState(false);

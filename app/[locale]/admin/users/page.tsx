@@ -9,7 +9,7 @@ import { Users, DollarSign, Search, CheckCircle2, Clock, Loader2, Ban, UserCheck
 export default function UserDirectoryPage() {
   const [userList, setUserList] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedUser, setSelectedUser] = useState<{ id: string; name: string } | null>(null);
+  const [selectedUser, setSelectedUser] = useState<{ id: string; name: string; vaults: any[] } | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
 
@@ -27,15 +27,12 @@ export default function UserDirectoryPage() {
   const handleToggleSuspension = async (userId: string, currentStatus: boolean) => {
     setActionLoadingId(userId);
     
-    // Call server action to toggle suspension status in database
     const res = await toggleUserSuspension(userId, !currentStatus);
     
     if (res.success) {
-      // Optimistically update local state immediately so the button flips instantly
       setUserList((prevList) =>
         prevList.map((u) => (u.id === userId ? { ...u, isSuspended: !currentStatus } : u))
       );
-      // Sync fresh data from the server in the background
       await loadUsers();
     } else {
       alert(res.error || 'Failed to update user suspension status.');
@@ -143,7 +140,7 @@ export default function UserDirectoryPage() {
                     {/* Action Buttons ⚡ */}
                     <td className="px-5 py-4 text-right space-x-2 whitespace-nowrap">
                       <button
-                        onClick={() => setSelectedUser({ id: user.id, name: user.name })}
+                        onClick={() => setSelectedUser({ id: user.id, name: user.name, vaults: user.vaults || [] })}
                         className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#8B5CF6]/10 text-[#A78BFA] border border-[#8B5CF6]/30 font-semibold hover:bg-[#8B5CF6] hover:text-white transition shadow-sm"
                       >
                         <DollarSign size={14} />
@@ -187,9 +184,10 @@ export default function UserDirectoryPage() {
         isOpen={!!selectedUser}
         userId={selectedUser?.id || ''}
         userName={selectedUser?.name || ''}
+        vaults={selectedUser?.vaults || []}
         onClose={() => {
           setSelectedUser(null);
-          loadUsers(); // Refresh balances and details after closing! 🔄
+          loadUsers();
         }}
       />
     </div>

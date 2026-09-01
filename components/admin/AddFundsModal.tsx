@@ -1,22 +1,39 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { addFundsToUserAccount } from '@/actions/admin-ledger';
-import { DollarSign, X, Loader2, PlusCircle, CheckCircle } from 'lucide-react';
+import { DollarSign, X, Loader2, PlusCircle, CheckCircle, Wallet } from 'lucide-react';
+
+interface Vault {
+  id: string;
+  name: string;
+  currency: string;
+  accountNumber: string;
+  balance: string | number;
+}
 
 interface AddFundsModalProps {
   userId: string;
   userName: string;
+  vaults: Vault[]; // ✨ 1. Accept the user's vaults array as a prop
   isOpen: boolean;
   onClose: () => void;
 }
 
-export function AddFundsModal({ userId, userName, isOpen, onClose }: AddFundsModalProps) {
+export function AddFundsModal({ userId, userName, vaults = [], isOpen, onClose }: AddFundsModalProps) {
+  const [selectedVaultId, setSelectedVaultId] = useState('');
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+
+  // ✨ Auto-select the first vault when the modal opens or vaults change
+  useEffect(() => {
+    if (vaults && vaults.length > 0) {
+      setSelectedVaultId(vaults[0].id);
+    }
+  }, [vaults]);
 
   if (!isOpen) return null;
 
@@ -25,7 +42,13 @@ export function AddFundsModal({ userId, userName, isOpen, onClose }: AddFundsMod
     setLoading(true);
     setError('');
 
-    const res = await addFundsToUserAccount({ userId, amount, description });
+    // ✨ Pass vaultId along with userId, amount, and description to your backend action
+    const res = await addFundsToUserAccount({ 
+      userId, 
+      vaultId: selectedVaultId, 
+      amount, 
+      description 
+    });
 
     if (res.success) {
       setSuccess(true);
@@ -44,6 +67,7 @@ export function AddFundsModal({ userId, userName, isOpen, onClose }: AddFundsMod
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
       <div className="w-full max-w-md rounded-2xl border border-[#263346] bg-[#151C28] p-6 shadow-2xl space-y-5">
+        
         {/* Header 💳 */}
         <div className="flex items-center justify-between border-b border-[#263346] pb-4">
           <div className="flex items-center gap-2.5">
@@ -66,8 +90,32 @@ export function AddFundsModal({ userId, userName, isOpen, onClose }: AddFundsMod
 
         {/* Form 📝 */}
         <form onSubmit={handleSubmit} className="space-y-4">
+          
+          {/* ✨ Vault Selection Dropdown */}
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Amount (USD)</label>
+            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5 flex items-center gap-1.5">
+              <Wallet size={14} className="text-[#8B5CF6]" /> Target Vault Account
+            </label>
+            <select
+              value={selectedVaultId}
+              onChange={(e) => setSelectedVaultId(e.target.value)}
+              className="w-full rounded-xl border border-[#263346] bg-[#0B0F17] px-4 py-3 text-white focus:border-[#8B5CF6] focus:outline-none text-xs"
+              required
+            >
+              {vaults.length > 0 ? (
+                vaults.map((vault) => (
+                  <option key={vault.id} value={vault.id}>
+                    {vault.name} ({vault.currency}) — Acc: {vault.accountNumber}
+                  </option>
+                ))
+              ) : (
+                <option value="" disabled>No vaults available for this user</option>
+              )}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Amount</label>
             <div className="relative">
               <DollarSign className="absolute left-3.5 top-3.5 text-slate-500" size={18} />
               <input
@@ -95,7 +143,7 @@ export function AddFundsModal({ userId, userName, isOpen, onClose }: AddFundsMod
 
           <button
             type="submit"
-            disabled={loading || success}
+            disabled={loading || success || vaults.length === 0}
             className="w-full flex items-center justify-center gap-2 rounded-xl bg-[#8B5CF6] py-3 font-bold text-white hover:bg-[#7C3AED] transition disabled:opacity-50 shadow-lg shadow-[#8B5CF6]/20 text-sm"
           >
             {loading ? <Loader2 size={18} className="animate-spin" /> : <span>Confirm Deposit</span>}

@@ -7,6 +7,7 @@ import { revalidatePath } from 'next/cache';
 
 export async function addFundsToUserAccount(formData: {
   userId: string;
+  vaultId: string;
   amount: string;
   description?: string;
 }) {
@@ -16,36 +17,27 @@ export async function addFundsToUserAccount(formData: {
       return { success: false, error: 'Please enter a valid amount greater than zero.' };
     }
 
-    // 1. Locate or create target user's ledger account
-    let [userLedgerAccount] = await db
-      .select()
-      .from(ledgerAccounts)
-      .where(eq(ledgerAccounts.userId, formData.userId));
-
-    if (!userLedgerAccount) {
-      const [user] = await db.select().from(users).where(eq(users.id, formData.userId));
-      if (!user) return { success: false, error: 'User does not exist.' };
-
-      [userLedgerAccount] = await db
-        .insert(ledgerAccounts)
-        .values({
-          userId: user.id,
-          accountNumber: user.accountNumber,
-          name: `${user.name}'s Primary Account`,
-          category: 'liability',
-          currency: 'USD',
-          balance: '0.00',
-        })
-        .returning();
+    if (!formData.vaultId) {
+      return { success: false, error: 'Please select a target vault account.' };
     }
 
-    // 2. Perform atomic transaction: Add journal entry, ledger line, AND update balance 🛡️
+    // Locate the specific vault/ledger account directly using vaultId
+    let [targetLedgerAccount] = await db
+      .select()
+      .from(ledgerAccounts)
+      .where(eq(ledgerAccounts.id, formData.vaultId));
+
+    if (!targetLedgerAccount) {
+      return { success: false, error: 'Target vault ledger account does not exist.' };
+    }
+
+    // Perform atomic transaction: Add journal entry, ledger line, AND update balance 🛡️
     await db.transaction(async (tx) => {
       // Create journal entry 📝
       const [entry] = await tx
         .insert(journalEntries)
         .values({
-          idempotencyKey: `admin-credit-${formData.userId}-${Date.now()}`,
+          idempotencyKey: `admin-credit-${formData.userId}-${formData.vaultId}-${Date.now()}`,
           description: formData.description || 'Admin Balance Adjustment',
           status: 'posted',
         })
@@ -54,18 +46,18 @@ export async function addFundsToUserAccount(formData: {
       // Record credit ledger line 📈
       await tx.insert(ledgerLines).values({
         journalEntryId: entry.id,
-        ledgerAccountId: userLedgerAccount.id,
+        ledgerAccountId: targetLedgerAccount.id,
         type: 'credit',
         amount: formData.amount,
       });
 
-      // Increment cached balance on ledger_accounts 💰
+      // Increment cached balance on the specific ledger_account 💰
       await tx
         .update(ledgerAccounts)
         .set({
           balance: sql`${ledgerAccounts.balance} + ${formData.amount}::numeric`,
         })
-        .where(eq(ledgerAccounts.id, userLedgerAccount.id));
+        .where(eq(ledgerAccounts.id, targetLedgerAccount.id));
     });
 
     revalidatePath('/admin/users');

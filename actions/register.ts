@@ -4,13 +4,11 @@
 import crypto from 'crypto';
 import { db } from '@/lib/db';
 import { users, ledgerAccounts, verificationCodes } from '@/lib/db/schema';
-import { CustomerRegisterSchema, CustomerRegisterInput } from '@/lib/validations/auth';
+import { CustomerRegisterSchema, CustomerRegisterInput, CurrencyCode } from '@/lib/validations/auth';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 import bcrypt from 'bcryptjs';
 import { sendEmail } from '@/lib/mail';
-
-type CurrencyCode = 'USD' | 'EUR' | 'GBP' | 'AUD' | 'CAD' | 'THB' | 'ZAR';
 
 function generateAccountNumber(): string {
   const prefix = '3';
@@ -18,7 +16,7 @@ function generateAccountNumber(): string {
   return `${prefix}${randomDigits.slice(0, 9)}`;
 }
 
-// 📝 Step 1: Validate input, save temporary code, and send Zoho email
+// 📝 Step 1: Validate input, save temporary code, and send verification email
 export async function initiateRegistration(formData: CustomerRegisterInput) {
   try {
     const validated = CustomerRegisterSchema.parse(formData);
@@ -46,7 +44,7 @@ export async function initiateRegistration(formData: CustomerRegisterInput) {
       set: { code, password: hashedPassword, expiresAt },
     });
 
-    // 📧 Send the verification code via Zoho Mail
+    // 📧 Send verification email via Gmail SMTP
     await sendEmail({
       to: validated.email,
       subject: 'Verify Your Apex Vault Account 🛡️',
@@ -109,7 +107,7 @@ export async function verifyAndRegister(email: string, code: string, primaryCurr
       })
       .returning();
 
-    // 🏦 Create primary vault ledger account
+    // 🏦 Create primary vault ledger account with the selected currency
     await db.insert(ledgerAccounts).values({
       userId: newUser.id,
       accountNumber: newUser.accountNumber,
@@ -118,7 +116,7 @@ export async function verifyAndRegister(email: string, code: string, primaryCurr
       currency: primaryCurrency,
     });
 
-    // 📧 Send the success confirmation email via Zoho
+    // 📧 Send success confirmation email
     await sendEmail({
       to: newUser.email,
       subject: 'Welcome to Apex Vault — Registration Successful 👑',
