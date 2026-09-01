@@ -27,7 +27,7 @@ export default function CustomerRegisterPage() {
   const [phone, setPhone] = useState('');
   const [gender, setGender] = useState<'male' | 'female' | 'other' | 'prefer_not_to_say'>('male');
   const [country, setCountry] = useState('United Kingdom');
-  const [primaryCurrency, setPrimaryCurrency] = useState<'USD' | 'EUR' | 'GBP' | 'AUD' | 'CAD'>('USD');
+  const [primaryCurrency, setPrimaryCurrency] = useState<'USD' | 'EUR' | 'GBP' | 'AUD' | 'CAD' | 'THB' | 'ZAR'>('USD');
   const [streetAddress, setStreetAddress] = useState('');
   const [governmentId, setGovernmentId] = useState('');
   const [agreedToTerms, setAgreedToTerms] = useState(false);
@@ -243,8 +243,10 @@ export default function CustomerRegisterPage() {
                   <option value="Italy">Italy 🇮🇹</option>
                   <option value="Canada">Canada 🇨🇦</option>
                   <option value="Australia">Australia 🇦🇺</option>
-                  <option value="Mexico">Mexico MXN</option>
-                  <option value="Philippine">Philippine  PHP</option>
+                  <option value="Mexico">Mexico 🇲🇽</option>
+                  <option value="Philippine">Philippine 🇵🇭</option>
+                  <option value="Thailand">Thailand 🇹🇭</option>
+                  <option value="South Africa">South Africa 🇿🇦</option>
                 </select>
               </div>
             </div>

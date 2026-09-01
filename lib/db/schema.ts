@@ -11,7 +11,7 @@ export const entryTypeEnum = pgEnum('entry_type', ['debit', 'credit']);
 export const ledgerStatusEnum = pgEnum('ledger_status', ['pending', 'posted', 'failed', 'reversed']);
 // Active Currencies managed by Admin
 
-export const currencyEnum = pgEnum('currency', ['USD', 'EUR', 'GBP', 'AUD', 'CAD', 'MXN', 'PHP']);
+export const currencyEnum = pgEnum('currency', ['USD', 'EUR', 'GBP', 'AUD', 'CAD', 'MXN', 'PHP', 'THB', 'ZAR']);
 export const currencies = pgTable('currencies', {
   code: text('code').primaryKey(), // e.g. 'USD', 'NGN', 'EUR', 'GBP'
   name: text('name').notNull(),    // e.g. 'US Dollar'

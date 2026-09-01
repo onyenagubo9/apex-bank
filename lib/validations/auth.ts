@@ -13,7 +13,7 @@ export const CustomerRegisterSchema = z.object({
   phone: z.string().min(10, 'Phone number must be at least 10 digits'),
   country: z.string().min(2, 'Please select your country'),
   gender: z.enum(['male', 'female', 'other', 'prefer_not_to_say']),
-  primaryCurrency: z.enum(['USD', 'EUR', 'GBP', 'AUD', 'CAD']),
+  primaryCurrency: z.enum(['USD', 'EUR', 'GBP', 'AUD', 'CAD', 'THB', 'ZAR']),
   streetAddress: z.string().min(5, 'Address required'),
   governmentId: z.string().min(5, 'Government ID required'),
 });

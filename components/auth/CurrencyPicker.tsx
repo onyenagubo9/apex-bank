@@ -1,7 +1,7 @@
 import React from 'react';
 
 // 1. Updated Currency Type 🎯
-export type Currency = 'USD' | 'EUR' | 'GBP' | 'AUD' | 'CAD';
+export type Currency = 'USD' | 'EUR' | 'GBP' | 'AUD' | 'CAD' | 'THB' | 'ZAR';
 
 interface CurrencyPickerProps {
   selected: Currency;
@@ -9,7 +9,7 @@ interface CurrencyPickerProps {
 }
 
 // 2. Updated Currency Options Array 📜
-const currencies: Currency[] = ['USD', 'EUR', 'GBP', 'AUD', 'CAD'];
+const currencies: Currency[] = ['USD', 'EUR', 'GBP', 'AUD', 'CAD', 'THB', 'ZAR'];
 
 export function CurrencyPicker({ selected, onSelect }: CurrencyPickerProps) {
   return (
@@ -17,8 +17,8 @@ export function CurrencyPicker({ selected, onSelect }: CurrencyPickerProps) {
       <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
         Primary Vault Currency
       </label>
-      {/* 3. Updated Grid Columns from 4 to 5 📐 */}
-      <div className="grid grid-cols-5 gap-2">
+      {/* 3. Updated Grid Columns to accommodate 7 currencies 📐 */}
+      <div className="grid grid-cols-7 gap-2">
         {currencies.map((curr) => (
           <button
             key={curr}
