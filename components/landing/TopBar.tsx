@@ -13,13 +13,18 @@ export function TopBar() {
   const [isPending, startTransition] = useTransition();
   const [isOpen, setIsOpen] = useState(false);
 
+  // ✨ Added German, Filipino, Thai, and Italian
   const languages = [
     { code: 'en', label: 'English', flag: '🇺🇸' },
     { code: 'fr', label: 'Français', flag: '🇫🇷' },
     { code: 'es', label: 'Español', flag: '🇪🇸' },
+    { code: 'de', label: 'Deutsch', flag: '🇩🇪' },
+    { code: 'fil', label: 'Filipino', flag: '🇵🇭' },
+    { code: 'th', label: 'ไทย', flag: '🇹🇭' },
+    { code: 'it', label: 'Italiano', flag: '🇮🇹' },
   ];
 
-  const handleLanguageChange = (newLocale: 'en' | 'fr' | 'es') => {
+  const handleLanguageChange = (newLocale: 'en' | 'fr' | 'es' | 'de' | 'fil' | 'th' | 'it') => {
     setIsOpen(false);
     startTransition(() => {
       router.replace(pathname, { locale: newLocale });
@@ -67,7 +72,7 @@ export function TopBar() {
               {languages.map((lang) => (
                 <button
                   key={lang.code}
-                  onClick={() => handleLanguageChange(lang.code as 'en' | 'fr' | 'es')}
+                  onClick={() => handleLanguageChange(lang.code as any)}
                   className={`w-full text-left px-4 py-2 text-xs hover:bg-[#8B5CF6]/10 hover:text-white transition-colors flex items-center justify-between ${
                     locale === lang.code ? 'text-[#8B5CF6] font-bold bg-[#8B5CF6]/5' : 'text-slate-300'
                   }`}

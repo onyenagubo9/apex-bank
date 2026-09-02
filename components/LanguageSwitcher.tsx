@@ -13,7 +13,6 @@ export default function LanguageSwitcher() {
   const handleLocaleChange = (e: ChangeEvent<HTMLSelectElement>) => {
     const nextLocale = e.target.value;
     
-    // Use next-intl's router to smoothly transition locales without a manual page refresh
     startTransition(() => {
       router.replace(pathname, { locale: nextLocale });
     });
@@ -34,6 +33,10 @@ export default function LanguageSwitcher() {
         <option value="en">English 🇬🇧</option>
         <option value="es">Español 🇪🇸</option>
         <option value="fr">Français 🇫🇷</option>
+        <option value="de">Deutsch 🇩🇪</option>
+        <option value="fil">Filipino 🇵🇭</option>
+        <option value="th">ไทย 🇹🇭</option>
+        <option value="it">Italiano 🇮🇹</option>
       </select>
     </div>
   );
