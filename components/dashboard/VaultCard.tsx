@@ -15,6 +15,8 @@ function formatCurrency(amount: number, currency: string) {
     NGN: '₦',
     EUR: '€',
     GBP: '£',
+    ZAR: 'R',  // ✨ Added South African Rand symbol
+    CAD: 'CAD $', // ✨ Added CAD symbol for consistency
   };
   const symbol = symbolMap[currency] || '$';
   return `${symbol}${amount.toLocaleString('en-US', {
