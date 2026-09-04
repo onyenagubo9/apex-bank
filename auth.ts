@@ -10,7 +10,7 @@ import { headers } from 'next/headers';
 import { UAParser } from 'ua-parser-js';
 import { authenticator } from '@otplib/preset-default';
 
-// 🛡️ Custom error classes with explicit constructors for Auth.js serialization
+// 🛡️ Custom error classes
 class TwoFactorRequiredError extends CredentialsSignin {
   constructor() {
     super();
@@ -127,7 +127,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             headerList.get('x-real-ip') || 
             '127.0.0.1';
         } catch (e) {
-          // Fallback if headers context is unavailable during background polling
+          // Fallback if headers context is unavailable
         }
 
         const parser = new UAParser(rawUserAgent);
@@ -152,7 +152,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           lastActive: new Date(),
         });
 
-        // 📝 Record security audit log entry including visitor IP (without country)
+        // 📝 Record security audit log entry
         await db.insert(auditLogs).values({
           userId: user.id,
           action: 'USER_SIGNIN',
@@ -160,7 +160,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           userAgent: rawUserAgent,
         });
 
-        // 6. Return user object ✅
+        // 6. Return user object cleanly ✅
         return {
           id: user.id,
           name: user.name,
@@ -179,7 +179,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return token;
     },
     async session({ session, token }) {
-      if (session.user) {
+      if (session.user && token) {
         session.user.id = token.id as string;
         session.user.role = (token.role as 'customer' | 'admin') || 'customer';
       }
